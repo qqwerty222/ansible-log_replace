@@ -1,0 +1,75 @@
+---
+
+- name: Create partition
+  parted:
+    device: /dev/sdb
+    number: 1
+    flags: [ lvm ]
+    state: present
+    part_end: 5GB
+
+- name: Create volume group
+  lvg:
+    vg: vg01
+    pvs: /dev/sdb1
+    
+- name: Create logical group
+  lvol:
+    vg: vg01
+    lv: lv01
+    size: 4096m
+
+- name: Create directory /mnt/tmp_vol
+  file:
+    path: /mnt/tmp_vol
+    state: directory
+
+- name: Format into ext4
+  filesystem:
+    fstype: ext4
+    dev: /dev/vg01/lv01
+
+- name: Mount lv to /mnt/temp_vol
+  mount: 
+    path: /mnt/temp_vol
+    src: /dev/vg01/lv01
+    fstype: ext4
+    state: mounted 
+
+- name: Set single.user mode
+  command: init 1
+
+- name: Copy /var/log to /mnt/temp_vol
+  copy: 
+    src: /var/log
+    dest: /mnt/temp_vol/
+    backup: yes
+    remote_src: yes 
+
+- name: Remove original /var/log
+  file:
+    path: /var/log
+    state: absent
+
+- name: Create empty /var/log as mount point
+  file: 
+    path: /var/log
+    state: directory
+
+- name: Unmount /mnt/temp_vol
+  mount:
+    path: /mnt/temp_vol
+    state: unmounted
+
+- name: Edit /etc/fstab
+  lineinfile:
+    dest: /etc/fstab
+    line: /dev/vg01/lv01 /var/log ext4 defaults 0 0 
+
+- name: Reload fstab
+  command: mount -a
+
+- name: Change to multi.user mode
+  command: init 3 
+  notify: Restart machine
+

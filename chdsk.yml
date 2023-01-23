@@ -1,0 +1,12 @@
+---
+
+- name: prepare disk and remount some dir on it
+  hosts: servers
+  vars:
+  become: true
+  remote_user: bohdan
+  roles: 
+    - test-hdd
+  
+  
+
