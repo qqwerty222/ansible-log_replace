@@ -3,7 +3,7 @@
   command: init 1  
   notify: "show log"
 
-- name: Show current time and mount
+- name: Show start log
   meta: flush_handlers
 
 - name: Create partition
@@ -74,10 +74,10 @@
 
 - name: Change to multi.user mode
   command: init 3 
-  notify: "show log"
 
 - name: Restart machine
   reboot: 
+  notify: "show log"
 
-- name: Show current time and mount
+- name: Show finish log
   meta: flush_handlers
