@@ -1,5 +1,26 @@
 ---
 
-- name: Restart machine
-  reboot:
+- name: Check current time
+  command: date +%X
+  register: current_time
+  listen: 'show log'
 
+- name: Check current mount
+  command: 'df {{ source_dir }}'
+  register: current_mount
+  listen: 'show log'
+
+- name: Check /var/log/syslog
+  command: tail /var/log/syslog
+  register: last_syslog
+  listen: 'show log'
+
+- name: Show current time and mount
+  debug:
+    msg:
+    - 'Start time: {{ current_time.stdout_lines}}'
+    - 'Current mount to {{ source_dir }}:'
+    - '{{ current_mount.stdout_lines }}'
+    - 'Last 10 logs from /var/log/syslog:'
+    - '{{ last_syslog.stdout_lines }}'
+  listen: 'show log'

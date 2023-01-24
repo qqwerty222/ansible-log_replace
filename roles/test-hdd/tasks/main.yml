@@ -1,8 +1,14 @@
 ---
+- name: Set single.user mode
+  command: init 1  
+  notify: "show log"
+
+- name: Show current time and mount
+  meta: flush_handlers
 
 - name: Create partition
   parted:
-    device: /dev/sdb
+    device: '/dev/{{ dev_name }}'
     number: 1
     flags: [ lvm ]
     state: present
@@ -11,7 +17,7 @@
 - name: Create volume group
   lvg:
     vg: vg01
-    pvs: /dev/sdb1
+    pvs: '/dev/{{ dev_name }}1'
     
 - name: Create logical group
   lvol:
@@ -19,41 +25,38 @@
     lv: lv01
     size: 4096m
 
-- name: Create directory /mnt/tmp_vol
-  file:
-    path: /mnt/tmp_vol
-    state: directory
-
 - name: Format into ext4
   filesystem:
     fstype: ext4
     dev: /dev/vg01/lv01
 
+- name: Create temporary volume
+  file:
+    path: /mnt/temp_vol
+    state: directory
+
 - name: Mount lv to /mnt/temp_vol
-  mount: 
+  mount:
     path: /mnt/temp_vol
     src: /dev/vg01/lv01
     fstype: ext4
-    state: mounted 
+    state: mounted
 
-- name: Set single.user mode
-  command: init 1
-
-- name: Copy /var/log to /mnt/temp_vol
-  copy: 
-    src: /var/log
+- name: 'Copy {{ source_dir }} to /mnt/temp_vol'
+  copy:
+    src: '{{ source_dir }}/'
     dest: /mnt/temp_vol/
     backup: yes
     remote_src: yes 
 
-- name: Remove original /var/log
+- name: Remove original '{{ source_dir }}'
   file:
-    path: /var/log
+    path: '{{ source_dir }}'
     state: absent
 
-- name: Create empty /var/log as mount point
+- name: Create empty '{{ source_dir }}' as mount point
   file: 
-    path: /var/log
+    path: '{{ source_dir }}'
     state: directory
 
 - name: Unmount /mnt/temp_vol
@@ -64,12 +67,17 @@
 - name: Edit /etc/fstab
   lineinfile:
     dest: /etc/fstab
-    line: /dev/vg01/lv01 /var/log ext4 defaults 0 0 
+    line: '/dev/vg01/lv01 {{ source_dir }} ext4 defaults 0 0' 
 
 - name: Reload fstab
   command: mount -a
 
 - name: Change to multi.user mode
   command: init 3 
-  notify: Restart machine
+  notify: "show log"
 
+- name: Restart machine
+  reboot: 
+
+- name: Show current time and mount
+  meta: flush_handlers
