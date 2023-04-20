@@ -18,7 +18,7 @@
 - name: Show current time and mount
   debug:
     msg:
-    - 'Start time: {{ current_time.stdout_lines}}'
+    - 'Time: {{ current_time.stdout_lines}}'
     - 'Current mount to {{ source_dir }}:'
     - '{{ current_mount.stdout_lines }}'
     - 'Last 10 logs from /var/log/syslog:'

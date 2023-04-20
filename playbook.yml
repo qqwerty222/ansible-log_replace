@@ -2,13 +2,11 @@
 
 - name: Prepare new disk and remount some dir to it
   hosts: servers
-  remote_user: bohdan
   become: true
-  vars:
-    dev_name: sdb
-    source_dir: /var/log
+
   roles: 
-    - test-hdd
+    - log-replace
+
   
   
 
